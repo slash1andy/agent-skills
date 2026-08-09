@@ -32,6 +32,7 @@ Agent Skills solve this by giving AI assistants **expert-level WordPress knowled
 | **wp-abilities-verify** | Verify a plugin's Abilities API registrations against their declared annotations |
 | **wp-wpcli-and-ops** | WP-CLI commands, automation, multisite, search-replace |
 | **wp-performance** | Profiling, caching, database optimization, Server-Timing |
+| **wp-production-safety** | Replay-safe durable data, side effects, migrations, and recovery |
 | **wp-phpstan** | PHPStan static analysis for WordPress projects (config, baselines, WP-specific typing) |
 | **wp-playground** | WordPress Playground routing, CLI runs, browser previews, and snapshots |
 | **wpds** | WordPress Design System |
@@ -163,6 +164,17 @@ node shared/scripts/skillpack-install.mjs --targets=antigravity-global
 
 This installs skills to `~/.gemini/antigravity/skills/` where Antigravity will discover them.
 
+### Install globally for Hermes Agent
+
+```bash
+node shared/scripts/skillpack-build.mjs --clean --targets=hermes
+node shared/scripts/skillpack-install.mjs --targets=hermes-global --dry-run
+node shared/scripts/skillpack-install.mjs --targets=hermes-global
+```
+
+This installs skills under `~/.hermes/skills/wordpress/`. See the
+[Hermes Agent guide](docs/hermes.md) for discovery and development-checkout behavior.
+
 ### Available options
 
 ```bash
@@ -206,6 +218,7 @@ node eval/harness/run.mjs
 - [Authoring Guide](docs/authoring-guide.md) - How to create and improve skills
 - [Principles](docs/principles.md) - Design philosophy
 - [Packaging](docs/packaging.md) - Build and distribution
+- [Hermes Agent](docs/hermes.md) - Build, install, and verify the Hermes skill pack
 - [Compatibility Policy](docs/compatibility-policy.md) - Version targeting
 
 ## License

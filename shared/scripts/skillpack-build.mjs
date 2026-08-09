@@ -5,7 +5,7 @@ function usage() {
   process.stderr.write(
     [
       "Usage:",
-      "  node shared/scripts/skillpack-build.mjs [--out=dist] [--targets=codex,vscode,claude,cursor] [--skills=skill1,skill2] [--clean]",
+      "  node shared/scripts/skillpack-build.mjs [--out=dist] [--targets=codex,vscode,claude,cursor,hermes] [--skills=skill1,skill2] [--clean]",
       "",
       "Outputs:",
       "  - <out>/codex/.codex/skills/<skill>/SKILL.md",
@@ -13,9 +13,10 @@ function usage() {
       "  - <out>/claude/.claude/skills/<skill>/SKILL.md",
       "  - <out>/cursor/.cursor/skills/<skill>/SKILL.md",
       "  - <out>/antigravity/.agents/skills/<skill>/SKILL.md",
+      "  - <out>/hermes/.hermes/skills/wordpress/<skill>/SKILL.md",
       "",
       "Options:",
-      "  --targets    Comma-separated list of targets (codex, vscode, claude, cursor; opt-in: antigravity). Default: codex,vscode,claude,cursor",
+      "  --targets    Comma-separated list of targets (codex, vscode, claude, cursor; opt-in: antigravity, hermes). Default: codex,vscode,claude,cursor",
       "  --skills     Comma-separated list of skill names to build. Default: all skills",
       "  --clean      Remove target directories before building",
       "",
@@ -103,6 +104,7 @@ function buildTarget({ repoRoot, outDir, target, skillDirs }) {
     claude: path.join(outDir, "claude", ".claude", "skills"),
     cursor: path.join(outDir, "cursor", ".cursor", "skills"),
     antigravity: path.join(outDir, "antigravity", ".agents", "skills"),
+    hermes: path.join(outDir, "hermes", ".hermes", "skills", "wordpress"),
   };
   const destSkillsRoot = rootByTarget[target];
   assert(destSkillsRoot, `Unknown target: ${target}`);
@@ -119,7 +121,7 @@ function buildTarget({ repoRoot, outDir, target, skillDirs }) {
   process.stdout.write(`OK: built ${target} skillpack at ${rel}\n`);
 }
 
-const VALID_TARGETS = ["codex", "vscode", "claude", "cursor", "antigravity"];
+const VALID_TARGETS = ["codex", "vscode", "claude", "cursor", "antigravity", "hermes"];
 
 function main() {
   const args = parseArgs(process.argv.slice(2));
