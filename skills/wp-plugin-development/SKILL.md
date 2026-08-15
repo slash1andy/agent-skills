@@ -88,6 +88,18 @@ See:
 See:
 - `references/data-and-cron.md`
 
+## WPCS / PHPCS maintenance
+
+Before changing PHP CodeSniffer tooling, inspect the project's `composer.json`, `composer.lock`, `phpcs.xml*`, and documented scripts. Record the installed WPCS, PHP_CodeSniffer, PHPCSUtils, and supported WordPress version; do not install or upgrade lint tooling merely because a newer WPCS exists.
+
+For [WPCS 3.4.0](https://github.com/WordPress/WordPress-Coding-Standards/releases/tag/3.4.0):
+
+- Require PHP_CodeSniffer >=3.13.5 and PHPCSUtils >=1.2.2 before adopting it.
+- Set `minimum_wp_version` explicitly when the plugin supports a WordPress version below the new 6.7 default; do not silently alter the diagnostic baseline.
+- Rename only existing `WordPress.Arrays.ArrayDeclarationSpacing` config uses from `allow_single_item_single_line_associative_arrays` to `allow_single_item_single_line_explicit_key_arrays`; behavior is unchanged.
+- Treat new `WordPress.PHP.NoSilencedErrors` findings for `@parse_url()` as error-handling work, not a reason for blanket suppression or mass autofix.
+- Run the repository's canonical PHPCS command and use `vendor/bin/phpcs -i` to confirm installed standards. A lint pass is not proof of security or runtime behavior.
+
 ## Verification
 
 - Plugin activates with no fatals/notices.
