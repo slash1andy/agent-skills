@@ -11,7 +11,7 @@ function usage() {
       "Options:",
       "  --dest=<path>       Destination repo root (required, unless using --global)",
       "  --from=<path>       Source directory (default: dist)",
-      "  --targets=<list>    Comma-separated targets: codex, vscode, claude, claude-global, cursor, cursor-global, antigravity, antigravity-global (default: codex,vscode)",
+      "  --targets=<list>    Comma-separated targets: codex, vscode, claude, claude-global, cursor, cursor-global, antigravity, antigravity-global, hermes-global (default: codex,vscode)",
       "  --skills=<list>     Comma-separated skill names to install (default: all)",
       "  --mode=<mode>       'replace' (default) or 'merge'",
       "  --global            Shorthand for --targets=claude-global (installs to ~/.claude/skills)",
@@ -27,6 +27,7 @@ function usage() {
       "  cursor-global       Install to ~/.cursor/skills/ (user-level, ignores --dest)",
       "  antigravity         Install to <dest>/.agents/skills/",
       "  antigravity-global  Install to ~/.gemini/antigravity/skills/ (user-level, ignores --dest)",
+      "  hermes-global       Install to ~/.hermes/skills/wordpress/ (user-level, ignores --dest)",
       "",
       "Examples:",
       "  # Build and install to a WordPress project",
@@ -38,6 +39,9 @@ function usage() {
       "",
       "  # Install globally for Cursor (all skills)",
       "  node shared/scripts/skillpack-install.mjs --targets=cursor-global",
+      "",
+      "  # Install globally for Hermes Agent (all skills)",
+      "  node shared/scripts/skillpack-install.mjs --targets=hermes-global",
       "",
       "  # Install specific skills globally",
       "  node shared/scripts/skillpack-install.mjs --global --skills=wp-playground,wp-block-development",
@@ -135,7 +139,7 @@ function listSkillDirs(skillsRoot) {
     .filter((d) => fs.existsSync(path.join(d, "SKILL.md")));
 }
 
-const VALID_TARGETS = ["codex", "vscode", "claude", "claude-global", "cursor", "cursor-global", "antigravity", "antigravity-global"];
+const VALID_TARGETS = ["codex", "vscode", "claude", "claude-global", "cursor", "cursor-global", "antigravity", "antigravity-global", "hermes-global"];
 
 // Map target to source subdirectory in dist
 function getSourceDir(fromDir, target) {
@@ -148,6 +152,8 @@ function getSourceDir(fromDir, target) {
       ? "cursor"
       : target === "antigravity-global"
       ? "antigravity"
+      : target === "hermes-global"
+      ? "hermes"
       : target;
   const targetDirMap = {
     codex: path.join(fromDir, "codex", ".codex", "skills"),
@@ -155,6 +161,7 @@ function getSourceDir(fromDir, target) {
     claude: path.join(fromDir, "claude", ".claude", "skills"),
     cursor: path.join(fromDir, "cursor", ".cursor", "skills"),
     antigravity: path.join(fromDir, "antigravity", ".agents", "skills"),
+    hermes: path.join(fromDir, "hermes", ".hermes", "skills", "wordpress"),
   };
   return targetDirMap[sourceTarget];
 }
@@ -170,6 +177,9 @@ function getDestDir(destRepoRoot, target) {
   }
   if (target === "antigravity-global") {
     return path.join(os.homedir(), ".gemini", "antigravity", "skills");
+  }
+  if (target === "hermes-global") {
+    return path.join(os.homedir(), ".hermes", "skills", "wordpress");
   }
 
   // Other targets require destRepoRoot
@@ -230,14 +240,15 @@ function installTarget({ fromDir, destRepoRoot, target, skillsFilter, mode, dryR
   const isGlobal =
     target === "claude-global" ||
     target === "cursor-global" ||
-    target === "antigravity-global";
+    target === "antigravity-global" ||
+    target === "hermes-global";
   const location = isGlobal ? destSkillsRoot : path.relative(destRepoRoot, destSkillsRoot) || ".";
   process.stdout.write(`OK: installed ${skillDirs.length} skill(s) to ${location}\n`);
 }
 
 function listAvailableSkills(fromDir) {
   // Check all possible target sources
-  const sources = ["codex", "vscode", "claude", "cursor", "antigravity"]
+  const sources = ["codex", "vscode", "claude", "cursor", "antigravity", "hermes-global"]
     .map((t) => getSourceDir(fromDir, t))
     .filter((p) => fs.existsSync(p));
 
@@ -276,7 +287,7 @@ function main() {
   }
 
   // --dest is required unless only using global targets
-  const globalTargets = new Set(["claude-global", "cursor-global", "antigravity-global"]);
+  const globalTargets = new Set(["claude-global", "cursor-global", "antigravity-global", "hermes-global"]);
   const needsDest = targets.some((t) => !globalTargets.has(t));
   if (needsDest && !args.dest) {
     process.stderr.write("Error: --dest is required for non-global targets.\n\n");

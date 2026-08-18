@@ -1,0 +1,27 @@
+{
+  "name": "Resume an interrupted plugin migration safely",
+  "skills": [
+    "wordpress-router",
+    "wp-project-triage",
+    "wp-plugin-development",
+    "wp-production-safety"
+  ],
+  "query": "Move plugin records to a new schema through scheduled batches. Jobs can overlap, deployments can be interrupted, and retries must not send duplicate customer notifications.",
+  "expected_behavior": [
+    "Run project triage and route to plugin development plus production safety",
+    "Inventory every reader, writer, scheduled entry point, notification side effect, and supported runtime version",
+    "Use a durable migration version and stable monotonic cursor rather than page offsets",
+    "Advance progress only after the batch's durable writes succeed",
+    "Make overlapping workers claim or lock work and make retries converge",
+    "Separate replay-safe storage from the independently idempotent notification side effect",
+    "Preserve a compatible read path while old and new code can overlap",
+    "Test interruption before and after progress commits, duplicate jobs, concurrent inserts, and replay"
+  ],
+  "success_criteria": [
+    "No skipped or duplicate records after interruption and resume",
+    "One notification per logical event under duplicate and overlapping delivery",
+    "Mixed-version deployment has an explicit compatible read path",
+    "Rollback and exhausted-retry behavior are documented and testable",
+    "No live customer data or live side effects are used for verification"
+  ]
+}

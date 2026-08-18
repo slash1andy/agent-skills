@@ -21,6 +21,10 @@ Antigravity is opt-in. Add `--targets=codex,vscode,claude,cursor,antigravity` to
 
 - `dist/antigravity/.agents/skills/*` (Antigravity repo layout)
 
+Hermes is opt-in. Add `--targets=hermes` to build:
+
+- `dist/hermes/.hermes/skills/wordpress/*` (Hermes user-skill layout)
+
 ## Install into another repo
 
 1. Build dist (above).
@@ -32,5 +36,10 @@ To include Antigravity, build it first and include it in the install targets:
 
 - `node shared/scripts/skillpack-build.mjs --clean --targets=codex,vscode,claude,cursor,antigravity`
 - `node shared/scripts/skillpack-install.mjs --dest=../some-repo --targets=codex,vscode,claude,cursor,antigravity`
+
+Hermes uses a user-level skill category rather than a project target:
+
+- `node shared/scripts/skillpack-build.mjs --clean --targets=hermes`
+- `node shared/scripts/skillpack-install.mjs --targets=hermes-global`
 
 By default, install mode is `replace` (it replaces only the skill directories it installs).
