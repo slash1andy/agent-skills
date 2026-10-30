@@ -18,6 +18,9 @@ jobs:
       - name: Validate skill metadata and triage report
         run: node shared/scripts/validate-skills.mjs
 
+      - name: Test upstream index parser
+        run: node --test shared/scripts/update-upstream-indices.test.mjs
+
       - name: Build skillpacks (Codex + VS Code)
         run: node shared/scripts/skillpack-build.mjs --clean --out=dist --targets=codex,vscode
 
