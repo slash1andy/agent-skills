@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 
 const SOURCES = {
   wordpressCoreVersionCheck: "https://api.wordpress.org/core/version-check/1.7/",
@@ -57,32 +58,30 @@ async function fetchJson(url) {
   }
 }
 
-function parseWpGutenbergMapFromHtml(html) {
+export function parseWpGutenbergMapFromHtml(html) {
   // Best-effort HTML table parsing without dependencies:
-  // 1) find the first <table> that contains "WordPress Version" and "Gutenberg Versions"
-  // 2) extract rows, then extract cells
+  // 1) find the first <table> whose header row names a WordPress and a Gutenberg version column
+  // 2) read cells by header position; upstream lists Gutenberg first and has renamed headers before
+  const isWpHeader = (c) => /^WordPress\s*Versions?$/i.test(c);
+  const isGbHeader = (c) => /^Gutenberg\s*Versions?$/i.test(c);
   const tables = [...html.matchAll(/<table[\s\S]*?<\/table>/gi)].map((m) => m[0]);
-  const target = tables.find((t) => /WordPress\s*Version/i.test(t) && /Gutenberg\s*Versions/i.test(t));
-  if (!target) return { rows: [], note: "table-not-found" };
 
-  const rowHtml = [...target.matchAll(/<tr[\s\S]*?<\/tr>/gi)].map((m) => m[0]);
-  const rows = [];
+  for (const table of tables) {
+    const rows = [...table.matchAll(/<tr[\s\S]*?<\/tr>/gi)].map((r) =>
+      [...r[0].matchAll(/<(td|th)[^>]*>([\s\S]*?)<\/\1>/gi)].map((m) => decodeHtml(stripTags(m[2])))
+    );
+    const header = rows.find((cells) => cells.some(isWpHeader) && cells.some(isGbHeader));
+    if (!header) continue;
 
-  for (const r of rowHtml) {
-    const cellHtml = [...r.matchAll(/<(td|th)[^>]*>([\s\S]*?)<\/\1>/gi)].map((m) => m[2]);
-    if (cellHtml.length < 2) continue;
-
-    const cells = cellHtml.map((c) => decodeHtml(stripTags(c)));
-    const wp = cells[0];
-    const gb = cells[1];
-
-    if (/WordPress\s*Version/i.test(wp) || /Gutenberg\s*Versions/i.test(gb)) continue;
-    if (!/^\d+\.\d+/.test(wp)) continue;
-
-    rows.push({ wordpress: wp, gutenberg: gb });
+    const wpCol = header.findIndex(isWpHeader);
+    const gbCol = header.findIndex(isGbHeader);
+    const mapped = rows
+      .filter((cells) => cells !== header && /^\d+\.\d+/.test(cells[wpCol] ?? ""))
+      .map((cells) => ({ wordpress: cells[wpCol], gutenberg: cells[gbCol] }));
+    return { rows: mapped, note: null };
   }
 
-  return { rows, note: null };
+  return { rows: [], note: "table-not-found" };
 }
 
 function normalizeWpVersionCheckPayload(payload) {
@@ -147,6 +146,10 @@ async function main() {
   const wordpress = normalizeWpVersionCheckPayload(wpVersionPayload);
   const gutenberg = normalizeGutenbergReleases(gbReleasesPayload);
   const map = parseWpGutenbergMapFromHtml(mapHtml);
+  // An empty map means the page layout changed; fail before writing so the sync PR can't wipe the data.
+  if (map.rows.length === 0) {
+    throw new Error(`No WordPress/Gutenberg rows parsed from ${SOURCES.wpGutenbergMapDoc} (${map.note ?? "no rows"})`);
+  }
 
   writeJson(path.join(outDir, "wordpress-core-versions.json"), {
     source: SOURCES.wordpressCoreVersionCheck,
@@ -167,7 +170,10 @@ async function main() {
   process.stdout.write("OK: updated shared/references/* upstream indices\n");
 }
 
-main().catch((err) => {
-  process.stderr.write(`${err?.stack || String(err)}\n`);
-  process.exit(1);
-});
+// Only fetch and write when run directly, so the test can import the parser.
+if (process.argv[1] && import.meta.url === pathToFileURL(fs.realpathSync(process.argv[1])).href) {
+  main().catch((err) => {
+    process.stderr.write(`${err?.stack || String(err)}\n`);
+    process.exit(1);
+  });
+}
