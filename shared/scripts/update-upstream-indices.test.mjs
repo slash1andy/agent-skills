@@ -46,6 +46,18 @@ test("accepts version ranges in both columns", () => {
   ).rows, [{ wordpress: "6.9.X", gutenberg: "20.5-21.9" }]);
 });
 
+test("rejects malformed numeric prefixes in either column order", () => {
+  for (const value of ["23.6garbage", "23.6-", "23.6.???"]) {
+    for (const gutenbergFirst of [true, false]) {
+      const headers = gutenbergFirst ? ["Gutenberg Version", "WordPress Version"] : ["WordPress Version", "Gutenberg Version"];
+      const cells = gutenbergFirst ? [value, "7.1.X"] : ["7.1.X", value];
+      assert.throws(() => parseWpGutenbergMapFromHtml(
+        `<table><tr>${headers.map((h) => `<th>${h}</th>`).join("")}</tr><tr>${cells.map((c) => `<td>${c}</td>`).join("")}</tr></table>`
+      ), /Invalid Gutenberg version/);
+    }
+  }
+});
+
 test("failed scrapes leave all index files unchanged", (t) => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "upstream-index-test-"));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
@@ -57,6 +69,9 @@ test("failed scrapes leave all index files unchanged", (t) => {
   for (const html of [
     "<html>no table</html>",
     "<table><tr><th>WordPress Version</th><th>Gutenberg Version</th></tr><tr><td>7.1.X</td></tr></table>",
+    ...["23.6garbage", "23.6-", "23.6.???"].map((value) =>
+      `<table><tr><th>WordPress Version</th><th>Gutenberg Version</th></tr><tr><td>7.1.X</td><td>${value}</td></tr></table>`
+    ),
   ]) {
     const code = `process.argv[1] = ${JSON.stringify(fileURLToPath(script))};
       globalThis.fetch = async (url) => ({ ok: true, text: async () =>

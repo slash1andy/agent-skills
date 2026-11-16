@@ -78,7 +78,7 @@ export function parseWpGutenbergMapFromHtml(html) {
     const mapped = rows
       .filter((cells) => cells !== header && /^\d+\.\d+/.test(cells[wpCol] ?? ""))
       .map((cells) => {
-        if (!/^\d+\.\d+/.test(cells[gbCol] ?? "")) {
+        if (!/^\d+\.\d+(?:\.\d+)?(?:\s*[-–]\s*\d+\.\d+(?:\.\d+)?)?$/.test(cells[gbCol] ?? "")) {
           throw new Error(`Invalid Gutenberg version for WordPress ${cells[wpCol]}`);
         }
         return { wordpress: cells[wpCol], gutenberg: cells[gbCol] };
