@@ -35,6 +35,7 @@ WP-CLI commands can be destructive. Before running anything that writes:
 1. Confirm environment (dev/staging/prod).
 2. Confirm targeting (path/url) so you don’t hit the wrong site.
 3. Make a backup when performing risky operations.
+4. Capture installation and user-management output privately and redact secrets before printing, saving shareable receipts, or delivering tool results: even a prompted `wp core install` can print a generated administrator password. Never assume stdin supplied the intended argument. After installation, read back `siteurl`, `home`, environment and table prefix before activation; report comparison booleans rather than unexpected private values. If a fixture credential appears in output, redact retained receipts and invalidate it through an authorized native account operation without printing its replacement.
 
 Read:
 - `references/safety.md`
