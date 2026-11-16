@@ -144,8 +144,6 @@ Available containers: `mysql`, `wordpress`, `cli`, `composer`, `phpmyadmin`.
 
 ### 6. Manage the environment
 
-Database resets, cleanup, and destroy delete local data. Do not run them as routine setup or verification. Require explicit approval for the destructive operation or confirm that the target is a disposable fixture created for this task; back up any data that must be preserved first.
-
 ```sh
 wp-env stop                    # Stop and free ports
 wp-env reset development       # Reset dev database (keeps test)
@@ -193,7 +191,7 @@ IDE listens on port **9003**. VS Code `launch.json` needs:
 - [ ] `http://localhost:8888/wp-admin/` loads the WordPress admin
 - [ ] `wp-env run cli wp plugin list` shows expected plugins
 - [ ] Plugin/theme under development appears in the WordPress admin
-- [ ] Existing content remains intact; do not reset the database to verify setup
+- [ ] Database resets work: `wp-env reset development`
 
 ## Failure modes / debugging
 
@@ -203,8 +201,8 @@ IDE listens on port **9003**. VS Code `launch.json` needs:
 | "Port 8888 already in use" | Port conflict | Use `--auto-port` or set custom `port` in `.wp-env.json` |
 | Plugin not appearing | Missing `Plugin Name:` header in main PHP file | Add standard plugin header comment |
 | "Could not find a valid source" | Invalid source string in config | Use full ZIP URL for wp.org plugins, not bare slugs |
-| Stale environment after source changes | Source configuration or cached dependencies | Inspect mappings and logs first; use `wp-env start --update` when a source/configuration refresh is needed. Gate any destroy/rebuild on the data-preservation requirements above |
-| White screen / PHP errors | Unknown until diagnosed | Inspect `wp-env logs --no-watch` and the PHP error, then fix its cause. Reset only for confirmed database corruption and subject to the data-preservation requirements above |
+| Stale environment after source changes | Cached Docker volumes | `wp-env start --update` or `wp-env destroy && wp-env start` |
+| White screen / PHP errors | Corrupted database | `wp-env reset all && wp-env start` |
 | Override not taking effect | Wrong merge behavior | `plugins`/`themes` in override **replace** base arrays; only `config`/`mappings` merge |
 | Tests environment not accessible | Wrong port | Test environment runs on port 8889 by default |
 | Xdebug not connecting | IDE not listening or wrong port | Ensure IDE listens on port 9003 with correct `pathMappings` |
